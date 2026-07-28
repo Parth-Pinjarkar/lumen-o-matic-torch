@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LUMEN-O-MATIC 3000™ | The World's Most Over-Engineered Torch</title>
+  <meta name="description" content="An unnecessarily funny flashlight simulator equipped with UV Ghost Hunting, Police Sirens, Disco Strobes, 100% Battery Saver Mode, and interactive dark room scavenger hunts.">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔦</text></svg>">
+</head>
+<body>
+
+  <!-- 😈 IRRITATING FEATURE: Moth cursor follower -->
+  <div id="mothCursor">🦟</div>
+
+  <!-- 😈 IRRITATING FEATURE: Cookie Banner that never goes away -->
+  <div id="cookieBanner" class="cookie-banner">
+    <span>🍪 We use cookies, crumbs, and mild psychological stress to improve your experience.</span>
+    <div style="display:flex;gap:0.5rem;">
+      <button id="cookieRejectBtn" class="cookie-btn reject">Reject All</button>
+      <button id="cookieAcceptBtn" class="cookie-btn accept">Accept</button>
+    </div>
+  </div>
+
+  <!-- 😈 IRRITATING FEATURE: Relentless Newsletter Popup -->
+  <div id="newsletterModal" class="modal-overlay" style="display:none">
+    <div class="modal-box">
+      <div class="modal-icon">📧</div>
+      <h2 class="modal-title">Wait! Don't leave!</h2>
+      <p class="modal-subtitle">Sign up for our newsletter and get <strong>0% off</strong> absolutely nothing!</p>
+      <input id="emailInput" type="email" class="modal-input" placeholder="your@email.com (we will spam this)">
+      <div style="display:flex;gap:0.75rem;margin-top:1rem;">
+        <button id="newsletterSignupBtn" class="modal-btn primary">YES SPAM ME 📮</button>
+        <button id="newsletterCloseBtn" class="modal-btn secondary">No thanks, I hate fun</button>
+      </div>
+      <p id="newsletterTimer" style="font-size:0.78rem;color:#64748b;margin-top:0.75rem;">This popup will reappear in 12 seconds.</p>
+    </div>
+  </div>
+
+  <!-- 😈 IRRITATING FEATURE: Impossible CAPTCHA Modal -->
+  <div id="captchaModal" class="modal-overlay" style="display:none">
+    <div class="modal-box">
+      <div class="modal-icon">🤖</div>
+      <h2 class="modal-title">Security Verification Required</h2>
+      <p class="modal-subtitle">Please select all images that contain <strong id="captchaTarget">a flashlight</strong></p>
+      <div id="captchaGrid" class="captcha-grid">
+        <!-- filled by JS -->
+      </div>
+      <p id="captchaError" style="color:#f87171;font-size:0.85rem;height:1.2rem;"></p>
+      <div style="display:flex;gap:0.75rem;margin-top:0.5rem;">
+        <button id="captchaVerifyBtn" class="modal-btn primary">Verify I'm Human</button>
+        <button id="captchaRefreshBtn" class="modal-btn secondary">🔄 Try Different</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 😈 IRRITATING FEATURE: Fake Software Update Progress Popup -->
+  <div id="updateModal" class="modal-overlay" style="display:none">
+    <div class="modal-box">
+      <div class="modal-icon">⬇️</div>
+      <h2 class="modal-title">Critical Torch Firmware Update</h2>
+      <p class="modal-subtitle" id="updateStatusMsg">Downloading update... Please do not turn off your torch.</p>
+      <div class="progress-track">
+        <div id="progressBar" class="progress-fill"></div>
+      </div>
+      <p id="progressPercent" style="font-family:monospace;font-size:0.9rem;color:#ffaa00;margin-top:0.5rem;">0%</p>
+      <button id="cancelUpdateBtn" class="modal-btn secondary" style="margin-top:0.75rem;">Cancel</button>
+    </div>
+  </div>
+  <!-- Background Pattern -->
+  <div class="bg-grid"></div>
+
+  <!-- Realtime Light Canvas Overlay -->
+  <canvas id="lightCanvas"></canvas>
+
+  <!-- Funny Warning Toast Notification -->
+  <div id="warningToast" class="warning-toast">
+    <span class="toast-icon">⚡</span>
+    <span id="toastMessage">Bulb flickered! Click <strong>SLAP TORCH</strong> to fix the contact springs.</span>
+  </div>
+
+  <!-- Navigation Header -->
+  <header>
+    <div class="brand">
+      <span class="brand-icon">🔦</span>
+      <h1 class="brand-title">LUMEN-O-MATIC 3000</h1>
+      <span class="brand-tag">v3.14 Funny Edition</span>
+    </div>
+
+    <div class="header-status">
+      <div class="status-pill">
+        <span class="status-indicator"></span>
+        <span>Batteries: <strong>99.8% (Taped Duracells)</strong></span>
+      </div>
+
+      <div class="status-pill">
+        <span>Curiosities Found: <strong id="foundCounter">0/6</strong></span>
+      </div>
+
+      <button id="audioToggleBtn" class="audio-btn">
+        <span id="audioIcon">🔊</span> Sound: ON
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content Layout -->
+  <main>
+
+    <!-- Dark Room Interactive Scavenger Playground -->
+    <section class="dark-room-section" id="darkRoom">
+      <div class="room-instruction">
+        <span>💡 Drag your cursor or finger to shine the beam and reveal night secrets!</span>
+      </div>
+
+      <!-- Hidden Object 1: Missing Sock #2 -->
+      <div class="hidden-item" id="item1" style="top: 25%; left: 15%;" data-name="Missing Sock #2" data-desc="Escaped the washing machine in 2021. Now living free.">
+        <span class="item-icon">🧦</span>
+        <span class="item-label">Missing Sock #2</span>
+      </div>
+
+      <!-- Hidden Object 2: Dust Bunny Emperor -->
+      <div class="hidden-item" id="item2" style="top: 70%; left: 35%;" data-name="Dust Bunny Emperor" data-desc="Plotting world domination beneath the couch.">
+        <span class="item-icon">🐇</span>
+        <span class="item-label">Dust Bunny Emperor</span>
+      </div>
+
+      <!-- Hidden Object 3: Lethal Lego Brick -->
+      <div class="hidden-item" id="item3" style="top: 40%; left: 65%;" data-name="Step Hazard #402" data-desc="Waiting patiently for bare human feet in the dark.">
+        <span class="item-icon">🧱</span>
+        <span class="item-label">Step Hazard #402</span>
+      </div>
+
+      <!-- Hidden Object 4: Ancient Taco -->
+      <div class="hidden-item" id="item4" style="top: 75%; left: 78%;" data-name="Ancient Taco (2022)" data-desc="Surprisingly well-preserved under the bed.">
+        <span class="item-icon">🌮</span>
+        <span class="item-label">Ancient Taco</span>
+      </div>
+
+      <!-- Hidden Object 5: Suspicious Coat Rack -->
+      <div class="hidden-item" id="item5" style="top: 20%; left: 82%;" data-name="Suspicious Coat Rack" data-desc="Looks 100% like a shadowy figure until you turn on the light.">
+        <span class="item-icon">🧥</span>
+        <span class="item-label">Coat Rack (Not a Ghost)</span>
+      </div>
+
+      <!-- Hidden Object 6: Alien Footprint (UV Light Only) -->
+      <div class="hidden-item uv-only" id="item6" style="top: 55%; left: 48%;" data-name="Glowing Alien Footprint" data-desc="Ectoplasmic evidence detected only under UV light!">
+        <span class="item-icon">👽</span>
+        <span class="item-label">Alien Footprint (UV Secret)</span>
+      </div>
+    </section>
+
+    <!-- Torch Specs & Humor Feature Cards -->
+    <h2 class="section-title">Why LUMEN-O-MATIC™?</h2>
+    <p class="section-subtitle">Engineered with 0% compromise and 100% dubious physics.</p>
+
+    <div class="cards-grid">
+      <div class="card">
+        <div class="card-icon">🧲</div>
+        <h3 class="card-title">50,000 Moth Magnet</h3>
+        <p class="card-desc">Emits specialized wave frequencies mathematically proven to attract every insect within a 5-mile radius directly to your forehead.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-icon">🪫</div>
+        <h3 class="card-title">0-Photon Battery Saver</h3>
+        <p class="card-desc">Saves 100% of your device battery by emitting exactly 0 photons. Perfect for people who love dark rooms.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-icon">🚨</div>
+        <h3 class="card-title">Instant Rave / Panic Mode</h3>
+        <p class="card-desc">Flashes intense emergency colors so fast it confuses both home intruders and wild raccoons.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-icon">🖐️</div>
+        <h3 class="card-title">Kinetic Slap Mechanics</h3>
+        <p class="card-desc">Loose internal copper coil? Give your torch a firm slap to restore full voltage instantly!</p>
+      </div>
+    </div>
+
+    <!-- Bulb Configurator Section -->
+    <section class="bulb-configurator">
+      <h2 class="section-title">Bulb & Lens Customizer</h2>
+      <p class="section-subtitle">Select your preferred light emitter to alter beam characteristics and brightness.</p>
+
+      <div class="bulb-options">
+        <div class="bulb-card selected" data-bulb="standard">
+          <div class="bulb-header">
+            <span class="bulb-name">💡 1998 Incandescent</span>
+            <span class="bulb-tag">CLASSIC</span>
+          </div>
+          <p class="bulb-desc">Warm yellow beam. Has a 15% tendency to flicker loose unless smacked.</p>
+        </div>
+
+        <div class="bulb-card" data-bulb="tactical">
+          <div class="bulb-header">
+            <span class="bulb-name">⚡ 100,000 Lumen Laser</span>
+            <span class="bulb-tag">LETHAL</span>
+          </div>
+          <p class="bulb-desc">Blinding cyan-white concentrated beam capable of melting digital UI elements.</p>
+        </div>
+
+        <div class="bulb-card" data-bulb="rgb">
+          <div class="bulb-header">
+            <span class="bulb-name">🌈 RGB Gamer Laser</span>
+            <span class="bulb-tag">+50 FPS</span>
+          </div>
+          <p class="bulb-desc">Constantly shifts colors to increase your dark-room searching frame rate.</p>
+        </div>
+
+        <div class="bulb-card" data-bulb="ember">
+          <div class="bulb-header">
+            <span class="bulb-name">🕯️ Vintage Ember</span>
+            <span class="bulb-tag">COZY</span>
+          </div>
+          <p class="bulb-desc">Flickering warm orange candlelight. Soft on nocturnal eyes.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Funny Customer Reviews -->
+    <h2 class="section-title">Verified Customer Reviews</h2>
+    <p class="section-subtitle">Real feedback from real people (and one suspicious cat).</p>
+
+    <div class="reviews-grid">
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-quote">"I dropped my keys under the sofa. Turned on this torch, found my keys, plus $3.50 in quarters and a half-eaten taco from 2022. 10/10."</p>
+        <div class="review-author">
+          <div class="author-avatar">🧔</div>
+          <div class="author-info">
+            <span class="author-name">Dave McMidnight</span>
+            <span class="author-badge">Verified Couch Diver</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-quote">"The 100% Battery Saver mode changed my life. I haven't seen my room in 3 weeks, but my phone battery is still at 99%. Incredible innovation!"</p>
+        <div class="review-author">
+          <div class="author-avatar">👩</div>
+          <div class="author-info">
+            <span class="author-name">Sarah Darkness</span>
+            <span class="author-badge">Off-Grid Enthusiast</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="review-card">
+        <div class="review-stars">★☆☆☆☆</div>
+        <p class="review-quote">"Meow meow meow (Translation: Human pointed red strobe mode at wall. I chased it for 4 hours. My paws hurt)."</p>
+        <div class="review-author">
+          <div class="author-avatar">🐱</div>
+          <div class="author-info">
+            <span class="author-name">Barnaby The Cat</span>
+            <span class="author-badge">Feline Critic</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Frequently Questioned Answers -->
+    <h2 class="section-title">Frequently Questioned Answers</h2>
+    <p class="section-subtitle">Everything you were afraid to ask about digital photonics.</p>
+
+    <div class="faq-list">
+      <div class="faq-item">
+        <button class="faq-question">
+          <span>Is this flashlight website water-resistant?</span>
+          <span class="faq-icon">▼</span>
+        </button>
+        <div class="faq-answer">
+          This website is exactly as waterproof as your device. Please do not drop your monitor or laptop into soup to test this hypothesis.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">
+          <span>Why is my torch beam flickering?</span>
+          <span class="faq-icon">▼</span>
+        </button>
+        <div class="faq-answer">
+          You probably have the 1998 Incandescent bulb selected! Click the <strong>🖐️ SLAP TORCH</strong> button in the bottom dock to fix the contact springs with a kinetic smack.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">
+          <span>Does Solar Powered Mode really require direct sunlight?</span>
+          <span class="faq-icon">▼</span>
+        </button>
+        <div class="faq-answer">
+          Yes. If you turn on Solar Mode while inside a dark room, the torch will refuse to light up until you carry your device out into the sun. Science is unforgiving.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">
+          <span>Can the UV Ghost Hunter mode see actual ghosts?</span>
+          <span class="faq-icon">▼</span>
+        </button>
+        <div class="faq-answer">
+          It can reveal hidden glowing alien footprints and ectoplasmic artifacts in our dark room playground! If you see real ghosts in your house, we recommend calling professionals.
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Floating Physical Torch Dock Controls -->
+  <div class="control-dock">
+    <div class="dock-top-row">
+      <!-- Big Tactile Power Button -->
+      <button id="powerBtn" class="power-toggle-btn on">
+        <span id="powerIcon">⚡</span>
+        <span id="powerText">TORCH: ON</span>
+      </button>
+
+      <div class="dock-actions">
+        <button id="slapBtn" class="action-btn slap-btn" title="Slap loose bulb contacts to stop flickering">
+          <span>🖐️</span> Slap Torch
+        </button>
+        <button id="resetRoomBtn" class="action-btn" title="Reset dark room items">
+          <span>🔄</span> Reset Room
+        </button>
+      </div>
+    </div>
+
+    <!-- Mode Selector Pills -->
+    <div class="mode-selector">
+      <button class="mode-pill active" data-mode="standard">💡 Standard Beam</button>
+      <button class="mode-pill" data-mode="batterySaver">🪫 100% Battery Saver</button>
+      <button class="mode-pill" data-mode="policeSiren">🚨 Police Siren</button>
+      <button class="mode-pill" data-mode="disco">🪩 Disco Strobe</button>
+      <button class="mode-pill" data-mode="uvGhost">🔮 UV Ghost Hunter</button>
+      <button class="mode-pill" data-mode="candle">🕯️ Gentle Candle</button>
+      <button class="mode-pill" data-mode="solar">☀️ Solar Torch</button>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <p>© 2026 LUMEN-O-MATIC™ Laboratories. All rights reserved. No moths were harmed during the development of this website.</p>
+  </footer>
+
+  <!-- 😈 IRRITATING FEATURE: Dodging Free Torch button floating on screen -->
+  <button id="dodgeBtn" class="dodge-btn">🎁 CLAIM YOUR FREE TORCH NOW!!!</button>
+
+  <script src="app.js"></script>
+  <script src="annoy.js"></script>
+</body>
+</html>
